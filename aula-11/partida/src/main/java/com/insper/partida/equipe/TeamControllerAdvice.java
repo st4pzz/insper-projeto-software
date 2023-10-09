@@ -1,23 +1,30 @@
-package main.java.com.insper.partida.equipe;
+
+
+package com.insper.partida.equipe;
+
+import com.insper.partida.common.ErrorDTO;
+import com.insper.partida.equipe.exception.TeamAlreadyExistsException;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
 
 @ControllerAdvice
 public class TeamControllerAdvice {
-    
+
     @ExceptionHandler(TeamAlreadyExistsException.class)
-    public HashMap teamAlreadyExistsException(TeamAlreadyExistsException ex){
-        HashMap<String,String> error = new HashMap<>();
-        error.put("message", "Já existe uma equipe com esse nome");
-        error.put("code","400");
-        error.put("time",LocalDateTime.now().toString());
-
+    @ResponseBody
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorDTO teamAlreadyExistsException(TeamAlreadyExistsException ex) {
+        ErrorDTO error = new ErrorDTO();
+        error.setMessage(ex.getMessage());
+        error.setCode(400);
+        error.setTime(LocalDateTime.now());
         return error;
-
     }
-
-    
 
 
 
