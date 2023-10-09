@@ -70,15 +70,48 @@ public class GameService {
 
     public GameReturnDTO editGame(String identifier, EditGameDTO editGameDTO) {
         Game gameBD = gameRepository.findByIdentifier(identifier);
-
+    
+        
+        int oldScoreHome = gameBD.getScoreHome();
+        int oldScoreAway = gameBD.getScoreAway();
+        String oldHomeTeam = gameBD.getHome();
+        String oldAwayTeam = gameBD.getAway();
+    
         gameBD.setScoreAway(editGameDTO.getScoreAway());
         gameBD.setScoreHome(editGameDTO.getScoreHome());
         gameBD.setAttendance(editGameDTO.getAttendance());
         gameBD.setStatus("FINISHED");
-
+    
         Game game = gameRepository.save(gameBD);
-        return GameReturnDTO.covert(game);
+    
+        
+        updateTableForTeam(oldHomeTeam);
+        updateTableForTeam(oldAwayTeam);
+    
+        return GameReturnDTO.convert(game);
     }
+    
+    private void updateTableForTeam(String teamIdentifier) {
+        TeamReturnDTO team = teamService.getTeamByIdentifier(teamIdentifier);
+        List<Game> games = gameService.getGameByTeam(teamIdentifier);
+    
+        TimeDTO timeDTO = new TimeDTO();
+        timeDTO.setNome(team.getName());
+    
+        for (Game game : games) {
+            timeDTO.setPontos(timeDTO.getPontos() + verificaResultado(team, game));
+            timeDTO.setVitorias(timeDTO.getVitorias() + (verificaVitorias(team, game) ? 1 : 0));
+            timeDTO.setDerrotas(timeDTO.getDerrotas() + (verificaDerrotas(team, game) ? 1 : 0));
+            timeDTO.setEmpates(timeDTO.getEmpates() + (verificaEmpates(team, game) ? 1 : 0));
+            timeDTO.setGolsPro(timeDTO.getGolsPro() + verificaGolsPro(team, game));
+            timeDTO.setGolsContra(timeDTO.getGolsContra() + verificaGolsContra(team, game));
+            timeDTO.setJogos(timeDTO.getJogos() + 1);
+        }
+    
+        
+        teamService.updateTeamTable(teamIdentifier, timeDTO);
+    }
+    
 
     public void deleteGame(String identifier) {
         Game gameBD = gameRepository.findByIdentifier(identifier);

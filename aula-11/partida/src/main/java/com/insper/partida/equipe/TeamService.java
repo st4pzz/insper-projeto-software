@@ -20,6 +20,13 @@ public class  TeamService {
     }
 
     public TeamReturnDTO saveTeam(SaveTeamDTO saveTeam) {
+
+        
+        if (teamRepository.existsByIdentifier(saveTeam.getIdentifier())){
+            throw new TeamAlreadyExistsException();
+        }
+
+        
         Team team = new Team();
         team.setName(saveTeam.getName());
         team.setIdentifier(saveTeam.getIdentifier());

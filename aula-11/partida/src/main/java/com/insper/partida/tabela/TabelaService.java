@@ -20,15 +20,36 @@ public class TabelaService {
     @Autowired
     private GameService gameService;
 
-    public List<TimeDTO> getTabela() {
+    @Service
+public class TabelaService {
 
+    @Autowired
+    private TeamService teamService;
+
+    @Autowired
+    private GameService gameService;
+
+    
+    private static List<TimeDTO> tabela = new ArrayList<>();
+
+    
+    private static boolean needsUpdate = true;
+
+    public List<TimeDTO> getTabela() {
+    
+        if (needsUpdate) {
+            calcularTabela();
+        }
+        return tabela;
+    }
+
+    
+    private synchronized void calcularTabela() {
         List<TeamReturnDTO> times = teamService.listTeams();
-        List<TimeDTO> response = new ArrayList<>();
+        tabela.clear();
 
         for (TeamReturnDTO time : times) {
-
             List<Game> games = gameService.getGameByTeam(time.getIdentifier());
-
             TimeDTO timeDTO = new TimeDTO();
             timeDTO.setNome(time.getName());
 
@@ -38,16 +59,19 @@ public class TabelaService {
                 timeDTO.setDerrotas(timeDTO.getDerrotas() + (verificaDerrotas(time, game) ? 1 : 0));
                 timeDTO.setEmpates(timeDTO.getEmpates() + (verificaEmpates(time, game) ? 1 : 0));
                 timeDTO.setGolsPro(timeDTO.getGolsPro() + verificaGolsPro(time, game));
-                timeDTO.setGolsContra(timeDTO.getGolsContra()  + verificaGolsContra(time, game));
+                timeDTO.setGolsContra(timeDTO.getGolsContra() + verificaGolsContra(time, game));
                 timeDTO.setJogos(timeDTO.getJogos() + 1);
             }
-            response.add(timeDTO);
-
+            tabela.add(timeDTO);
         }
-        response.sort(Comparator.comparingInt(TimeDTO::getPontos).reversed());
-        return response;
 
+    
+        needsUpdate = false;
     }
+
+    
+}
+
 
     private Integer verificaResultado(TeamReturnDTO time, Game game) {
         if (game.getScoreHome() == game.getScoreAway()) {
